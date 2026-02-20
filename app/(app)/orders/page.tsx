@@ -7,19 +7,15 @@ import Modal from '@/components/Modal'
 import { Plus } from 'lucide-react'
 import { useOrders } from '@/hooks/useOrders'
 import { useActivities } from '@/hooks/useActivities'
-import { useParcelDeliveries } from '@/hooks/useParcelDeliveries'
 import OrderCard from '@/components/orders/OrderCard'
 import OrderForm from '@/components/orders/OrderForm'
 import ActivityCard from '@/components/orders/ActivityCard'
 import ActivityForm from '@/components/orders/ActivityForm'
-import ParcelDeliveryCard from '@/components/orders/ParcelDeliveryCard'
-import AddParcelForm from '@/components/orders/AddParcelForm'
 import type { Order, Activity } from '@/lib/types'
 
 const SECTIONS = [
   { key: 'deliveries', label: 'deliveries' },
   { key: 'activities', label: 'activities' },
-  { key: 'parcel', label: 'parcel' },
 ]
 
 const ADD_LABELS: Record<string, string> = {
@@ -27,7 +23,7 @@ const ADD_LABELS: Record<string, string> = {
   activities: 'add activity',
 }
 
-type SectionKey = 'deliveries' | 'activities' | 'parcel'
+type SectionKey = 'deliveries' | 'activities'
 
 export default function OrdersPage() {
   const [section, setSection] = useState<SectionKey>('deliveries')
@@ -37,7 +33,6 @@ export default function OrdersPage() {
 
   const orders = useOrders()
   const activities = useActivities()
-  const parcel = useParcelDeliveries()
 
   const closeModal = () => {
     setModal(null)
@@ -87,20 +82,8 @@ export default function OrdersPage() {
     }
   }
 
-  /* ---- Resolve loading / items for active section ---- */
-  const sectionData = {
-    deliveries: { loading: orders.loading, items: orders.items },
-    activities: { loading: activities.loading, items: activities.items },
-    parcel: { loading: parcel.loading, items: parcel.deliveries },
-  }
-
-  const { loading, items } = sectionData[section]
-
-  /* ---- Modal titles ---- */
-  const modalTitles: Record<string, { add: string; edit: string }> = {
-    deliveries: { add: 'add order', edit: 'edit order' },
-    activities: { add: 'add activity', edit: 'edit activity' },
-  }
+  const loading = section === 'deliveries' ? orders.loading : activities.loading
+  const items = section === 'deliveries' ? orders.items : activities.items
 
   return (
     <>
@@ -111,7 +94,6 @@ export default function OrdersPage() {
         onChange={(key) => setSection(key as SectionKey)}
       />
 
-      {/* Content area */}
       <div
         style={{
           padding: '16px 24px',
@@ -120,161 +102,88 @@ export default function OrdersPage() {
           gap: 8,
         }}
       >
-        {/* Parcel section */}
-        {section === 'parcel' && (
+        {/* Add button */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <button
+            onClick={handleAdd}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              background: 'none',
+              border: 'none',
+              color: 'var(--accent)',
+              fontFamily: 'var(--font-jetbrains)',
+              fontSize: 12,
+              cursor: 'pointer',
+              padding: 0,
+            }}
+          >
+            <Plus size={14} />
+            {ADD_LABELS[section]}
+          </button>
+        </div>
+
+        {loading ? (
           <>
-            <AddParcelForm onAdd={parcel.addDelivery} />
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 4 }}>
-              <button
-                onClick={parcel.reload}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--text-3)',
-                  fontFamily: 'var(--font-jetbrains)',
-                  fontSize: 11,
-                  cursor: 'pointer',
-                  padding: 0,
-                }}
-              >
-                refresh
-              </button>
-            </div>
-
-            {parcel.error ? (
-              <div style={{
-                textAlign: 'center',
-                color: 'var(--text-3)',
-                fontFamily: 'var(--font-jetbrains)',
-                fontSize: 12,
-                padding: '48px 0',
-                lineHeight: 1.6,
-              }}>
-                {parcel.error === 'Parcel API key not configured'
-                  ? 'add PARCEL_API_KEY to your environment to enable parcel tracking'
-                  : parcel.error}
-              </div>
-            ) : parcel.loading ? (
-              <>
-                {[0, 1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className="skeleton"
-                    style={{
-                      height: 72,
-                      borderRadius: 'var(--radius)',
-                    }}
-                  />
-                ))}
-              </>
-            ) : parcel.deliveries.length === 0 ? (
-              <div style={{
-                textAlign: 'center',
-                color: 'var(--text-3)',
-                fontFamily: 'var(--font-jetbrains)',
-                fontSize: 12,
-                padding: '48px 0',
-              }}>
-                no active deliveries
-              </div>
-            ) : (
-              parcel.deliveries.map((d, i) => (
-                <ParcelDeliveryCard key={d.tracking_number} delivery={d} index={i} />
-              ))
-            )}
-          </>
-        )}
-
-        {/* Non-parcel sections */}
-        {section !== 'parcel' && (
-          <>
-            {/* Add button */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <button
-                onClick={handleAdd}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--accent)',
-                  fontFamily: 'var(--font-jetbrains)',
-                  fontSize: 12,
-                  cursor: 'pointer',
-                  padding: 0,
-                }}
-              >
-                <Plus size={14} />
-                {ADD_LABELS[section]}
-              </button>
-            </div>
-
-            {/* Section content */}
-            {loading ? (
-              <>
-                {[0, 1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className="skeleton"
-                    style={{
-                      height: 72,
-                      borderRadius: 'var(--radius)',
-                    }}
-                  />
-                ))}
-              </>
-            ) : items.length === 0 ? (
+            {[0, 1, 2].map((i) => (
               <div
+                key={i}
+                className="skeleton"
                 style={{
-                  textAlign: 'center',
-                  color: 'var(--text-3)',
-                  fontFamily: 'var(--font-jetbrains)',
-                  fontSize: 12,
-                  padding: '48px 0',
+                  height: 72,
+                  borderRadius: 'var(--radius)',
                 }}
-              >
-                no {section} yet
-              </div>
-            ) : (
-              <>
-                {section === 'deliveries' &&
-                  orders.items.map((item, i) => (
-                    <OrderCard
-                      key={item.id}
-                      item={item}
-                      index={i}
-                      onClick={() => {
-                        setEditItem(item)
-                        setModal('edit')
-                      }}
-                    />
-                  ))}
+              />
+            ))}
+          </>
+        ) : items.length === 0 ? (
+          <div
+            style={{
+              textAlign: 'center',
+              color: 'var(--text-3)',
+              fontFamily: 'var(--font-jetbrains)',
+              fontSize: 12,
+              padding: '48px 0',
+            }}
+          >
+            no {section} yet
+          </div>
+        ) : (
+          <>
+            {section === 'deliveries' &&
+              orders.items.map((item, i) => (
+                <OrderCard
+                  key={item.id}
+                  item={item}
+                  index={i}
+                  onClick={() => {
+                    setEditItem(item)
+                    setModal('edit')
+                  }}
+                />
+              ))}
 
-                {section === 'activities' &&
-                  activities.items.map((item, i) => (
-                    <ActivityCard
-                      key={item.id}
-                      item={item}
-                      index={i}
-                      onMarkPaid={() => activities.markPaid(item.id)}
-                      onClick={() => {
-                        setEditItem(item)
-                        setModal('edit')
-                      }}
-                    />
-                  ))}
-              </>
-            )}
+            {section === 'activities' &&
+              activities.items.map((item, i) => (
+                <ActivityCard
+                  key={item.id}
+                  item={item}
+                  index={i}
+                  onMarkPaid={() => activities.markPaid(item.id)}
+                  onClick={() => {
+                    setEditItem(item)
+                    setModal('edit')
+                  }}
+                />
+              ))}
           </>
         )}
       </div>
 
-      {/* Modal */}
-      {modal && section !== 'parcel' && (
+      {modal && (
         <Modal
-          title={modalTitles[section]?.[modal] ?? ''}
+          title={section === 'deliveries' ? (modal === 'add' ? 'add order' : 'edit order') : (modal === 'add' ? 'add activity' : 'edit activity')}
           onClose={closeModal}
         >
           {section === 'deliveries' && (
