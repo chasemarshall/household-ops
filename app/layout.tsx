@@ -17,8 +17,8 @@ const outfit = Outfit({
 })
 
 export const metadata: Metadata = {
-  title: 'Household Ops',
-  description: 'Household management dashboard',
+  title: 'keep',
+  description: 'Household management for the whole family',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

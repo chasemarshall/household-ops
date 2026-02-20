@@ -103,7 +103,7 @@ export default function RegisterPage() {
             marginBottom: '8px',
           }}
         >
-          create household
+          join keep
         </h1>
         <p
           style={{

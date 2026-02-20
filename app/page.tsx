@@ -79,9 +79,7 @@ export default function LoginPage() {
             textAlign: 'center',
           }}
         >
-          household
-          <br />
-          ops
+          keep
         </h1>
 
         {/* Login form */}

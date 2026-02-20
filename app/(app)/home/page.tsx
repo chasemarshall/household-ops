@@ -104,7 +104,7 @@ export default function HomePage() {
 
   return (
     <>
-      <Header title="household ops" />
+      <Header title="keep" />
 
       {/* Greeting */}
       <div
