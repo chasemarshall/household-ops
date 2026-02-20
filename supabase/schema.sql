@@ -180,7 +180,7 @@ create policy "invite by token" on invites
   for select using (true);
 
 create policy "admin manage invites" on invites
-  for insert using (
+  for insert with check (
     household_id in (
       select household_id from profiles
       where id = auth.uid() and role = 'admin'
