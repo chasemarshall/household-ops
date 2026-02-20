@@ -1,65 +1,170 @@
-import Image from "next/image";
+'use client'
 
-export default function Home() {
+import { useState, useEffect, FormEvent } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { supabase } from '@/lib/supabase'
+import { useToast } from '@/contexts/ToastContext'
+import { useSession } from '@/contexts/SessionContext'
+
+const inputStyle: React.CSSProperties = {
+  background: 'transparent',
+  border: 'none',
+  borderBottom: '1px solid var(--border)',
+  color: 'var(--text-1)',
+  fontFamily: 'var(--font-outfit)',
+  fontSize: '15px',
+  padding: '8px 0',
+  outline: 'none',
+  width: '100%',
+}
+
+export default function LoginPage() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const { showToast } = useToast()
+  const { profile, loading } = useSession()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!loading && profile) router.push('/home')
+  }, [profile, loading, router])
+
+  const handleLogin = async (e: FormEvent) => {
+    e.preventDefault()
+    setSubmitting(true)
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) {
+      showToast(error.message, 'error')
+      setSubmitting(false)
+    } else {
+      router.push('/home')
+    }
+  }
+
+  const handleGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin + '/home' },
+    })
+    if (error) showToast(error.message, 'error')
+  }
+
+  if (loading) return null
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div
+      style={{
+        minHeight: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        background: 'var(--bg)',
+      }}
+    >
+      <div style={{ width: '100%', maxWidth: '320px' }}>
+        {/* Title */}
+        <h1
+          style={{
+            fontFamily: 'var(--font-jetbrains)',
+            fontSize: '48px',
+            fontWeight: 700,
+            color: 'var(--text-1)',
+            lineHeight: 1,
+            letterSpacing: '-2px',
+            marginBottom: '48px',
+            textAlign: 'center',
+          }}
+        >
+          household
+          <br />
+          ops
+        </h1>
+
+        {/* Login form */}
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <input
+            type="email"
+            placeholder="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            required
+            style={inputStyle}
+          />
+          <input
+            type="password"
+            placeholder="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            required
+            style={inputStyle}
+          />
+          <button
+            type="submit"
+            disabled={submitting}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--accent)',
+              fontFamily: 'var(--font-jetbrains)',
+              fontSize: '14px',
+              fontWeight: 400,
+              cursor: 'pointer',
+              padding: '12px 0 0',
+              textAlign: 'left',
+              opacity: submitting ? 0.5 : 1,
+            }}
+          >
+            {submitting ? 'signing in...' : 'sign in \u2192'}
+          </button>
+        </form>
+
+        {/* Divider */}
+        <div
+          style={{
+            borderTop: '1px solid var(--border)',
+            margin: '28px 0',
+          }}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        {/* Google */}
+        <button
+          onClick={handleGoogle}
+          style={{
+            width: '100%',
+            background: 'var(--card)',
+            border: 'none',
+            borderRadius: 'var(--radius)',
+            color: 'var(--text-1)',
+            fontFamily: 'var(--font-outfit)',
+            fontSize: '14px',
+            fontWeight: 400,
+            padding: '12px 0',
+            cursor: 'pointer',
+            textAlign: 'center',
+          }}
+        >
+          continue with google
+        </button>
+
+        {/* Create household link */}
+        <div style={{ textAlign: 'center', marginTop: '32px' }}>
+          <Link
+            href="/register"
+            style={{
+              color: 'var(--text-3)',
+              fontFamily: 'var(--font-jetbrains)',
+              fontSize: '12px',
+              textDecoration: 'none',
+            }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            create a household
+          </Link>
         </div>
-      </main>
+      </div>
     </div>
-  );
+  )
 }
