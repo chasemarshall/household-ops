@@ -147,11 +147,31 @@ alter table inventory_items   enable row level security;
 alter table documents         enable row level security;
 
 -- RLS Policies
-create policy "household members" on households
-  for all using (id in (select household_id from profiles where id = auth.uid()));
+-- Households: read/update/delete scoped to your household, but any authed user can create one
+create policy "read own household" on households
+  for select using (id in (select household_id from profiles where id = auth.uid()));
 
-create policy "household members" on profiles
-  for all using (household_id in (select household_id from profiles where id = auth.uid()));
+create policy "create household" on households
+  for insert with check (auth.uid() is not null);
+
+create policy "update own household" on households
+  for update using (id in (select household_id from profiles where id = auth.uid()));
+
+create policy "delete own household" on households
+  for delete using (id in (select household_id from profiles where id = auth.uid()));
+
+-- Profiles: read all in your household, but you can only insert your own row
+create policy "read household profiles" on profiles
+  for select using (household_id in (select household_id from profiles where id = auth.uid()));
+
+create policy "create own profile" on profiles
+  for insert with check (id = auth.uid());
+
+create policy "update own profile" on profiles
+  for update using (id = auth.uid());
+
+create policy "delete own profile" on profiles
+  for delete using (id = auth.uid());
 
 create policy "household members" on subscriptions
   for all using (household_id in (select household_id from profiles where id = auth.uid()));
