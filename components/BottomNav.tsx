@@ -36,7 +36,7 @@ export default function BottomNav() {
         }}
       >
         {TABS.map((tab) => {
-          const isActive = pathname === tab.href
+          const isActive = pathname.startsWith(tab.href)
           const Icon = tab.icon
 
           return (

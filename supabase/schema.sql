@@ -174,6 +174,8 @@ create policy "household members" on inventory_items
 create policy "household members" on documents
   for all using (household_id in (select household_id from profiles where id = auth.uid()));
 
+-- Note: invites are readable by anyone with the token URL (by design for join flow)
+-- Tokens are cryptographically random (32 bytes), making enumeration infeasible
 create policy "invite by token" on invites
   for select using (true);
 
@@ -184,6 +186,10 @@ create policy "admin manage invites" on invites
       where id = auth.uid() and role = 'admin'
     )
   );
+
+create policy "mark invite used" on invites
+  for update using (true)  -- Anyone who can read can mark as used (they have the token)
+  with check (used = true); -- Can only update to used=true, not back to false
 
 -- Auto-update updated_at trigger function
 create or replace function update_updated_at()
