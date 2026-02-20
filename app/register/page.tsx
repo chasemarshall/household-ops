@@ -47,30 +47,15 @@ export default function RegisterPage() {
       return
     }
 
-    // Create household
-    const { data: household, error: householdError } = await supabase
-      .from('households')
-      .insert({ name: householdName })
-      .select('id')
-      .single()
-
-    if (householdError || !household) {
-      showToast(householdError?.message ?? 'Failed to create household', 'error')
-      setSubmitting(false)
-      return
-    }
-
-    // Create profile
-    const { error: profileError } = await supabase.from('profiles').insert({
-      id: userId,
-      household_id: household.id,
-      display_name: displayName,
-      role: 'admin',
-      avatar_color: AVATAR_COLORS[0],
+    // Create household + profile via security definer function (bypasses RLS timing issues)
+    const { error: rpcError } = await supabase.rpc('register_household', {
+      p_household_name: householdName,
+      p_display_name: displayName,
+      p_avatar_color: AVATAR_COLORS[0],
     })
 
-    if (profileError) {
-      showToast(profileError.message, 'error')
+    if (rpcError) {
+      showToast(rpcError.message, 'error')
       setSubmitting(false)
       return
     }

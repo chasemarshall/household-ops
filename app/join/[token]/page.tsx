@@ -75,23 +75,19 @@ export default function JoinPage() {
     // Pick a random avatar color
     const avatarColor = AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)]
 
-    // Create profile
-    const { error: profileError } = await supabase.from('profiles').insert({
-      id: userId,
-      household_id: invite.household_id,
-      display_name: displayName,
-      role: 'member',
-      avatar_color: avatarColor,
+    // Create profile + mark invite used via security definer function
+    const { error: rpcError } = await supabase.rpc('join_household', {
+      p_household_id: invite.household_id,
+      p_display_name: displayName,
+      p_avatar_color: avatarColor,
+      p_invite_id: invite.id,
     })
 
-    if (profileError) {
-      showToast(profileError.message, 'error')
+    if (rpcError) {
+      showToast(rpcError.message, 'error')
       setSubmitting(false)
       return
     }
-
-    // Mark invite as used
-    await supabase.from('invites').update({ used: true }).eq('id', invite.id)
 
     router.push('/home')
   }
