@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { JetBrains_Mono, Outfit } from 'next/font/google'
 import './globals.css'
+import { SessionProvider } from '@/contexts/SessionContext'
+import { ToastProvider } from '@/contexts/ToastContext'
 
 const jetbrains = JetBrains_Mono({
   subsets: ['latin'],
@@ -23,7 +25,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${jetbrains.variable} ${outfit.variable}`}>
       <body style={{ fontFamily: 'var(--font-outfit), sans-serif', background: 'var(--bg)', color: 'var(--text-1)', minHeight: '100svh' }}>
-        {children}
+        <SessionProvider>
+          <ToastProvider>
+            {children}
+          </ToastProvider>
+        </SessionProvider>
       </body>
     </html>
   )
